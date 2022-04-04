@@ -1,0 +1,107 @@
+#!/bin/bash
+## acuRun pbs submission script
+#
+#PBS -l walltime=02:00:00
+#PBS -l select=16:ncpus=120:mem=400gb:mpiprocs=90:ompthreads=1
+#PBS -N acusolve
+
+MODEL_DIR=${MODEL_DIR:-/share/home/hpcuser/acusolve/models}
+MODEL=${MODEL:-impingingNozzle}
+JOB_ID=${PBS_JOBID}
+POST_FIX=${PBS_JOBID%.*}
+POST_FIX=$(printf "%06d" $POST_FIX)
+BASE_DIR="$PBS_O_WORKDIR/${MODEL}_${POST_FIX}"
+
+mkdir -p $BASE_DIR
+cd $BASE_DIR
+
+ln -s ${MODEL_DIR}/$MODEL/InputFiles/* .
+pwd
+ls
+
+NODES=`sort -u < $PBS_NODEFILE | wc -l`
+CORES=`wc -l < $PBS_NODEFILE`
+PPN=$(uniq -c < $PBS_NODEFILE | tail -n1 | awk '{print $1}')
+
+if [ "$PPN" == "16" ]
+then
+    VM_CORE_LIST="0,8,16,24,30,38,46,54,60,68,76,84,90,98,106,114"
+elif [ "$PPN" == "30" ]
+then
+    VM_CORE_LIST=$(echo "for (i=0;i<120;i+=4) for (j=0;j<1;j++) i+j" | bc | sed -z 's/\n/,/g;s/,$/\n/')
+elif [ "$PPN" == "32" ]
+then
+    VM_CORE_LIST="0,1,8,9,16,17,24,25,30,31,38,39,46,47,54,55,60,61,68,69,76,77,84,85,90,91,98,99,106,107,114,115"
+elif [ "$PPN" == "60" ]
+then
+    VM_CORE_LIST=$(echo "for (i=0;i<120;i+=4) for (j=0;j<2;j++) i+j" | bc | sed -z 's/\n/,/g;s/,$/\n/')
+elif [ "$PPN" == "64" ]
+then
+    VM_CORE_LIST="0,1,2,3,8,9,10,11,16,17,18,19,24,25,26,27,30,31,32,33,38,39,40,41,46,47,48,49,54,55,56,57,60,61,62,63,68,69,70,71,76,77,78,79,84,85,86,87,90,91,92,93,98,99,100,101,106,107,108,109,114,115,116,117"
+elif [ "$PPN" == "90" ]
+then
+    VM_CORE_LIST=$(echo "for (i=0;i<120;i+=4) for (j=0;j<3;j++) i+j" | bc | sed -z 's/\n/,/g;s/,$/\n/')
+elif [ "$PPN" == "96" ]
+then
+    VM_CORE_LIST="0,1,2,3,4,5,8,9,10,11,12,13,16,17,18,19,20,21,24,25,26,27,28,29,30,31,32,33,34,35,38,39,40,41,42,43,46,47,48,49,50,51,54,55,56,57,58,59,60,61,62,63,64,65,68,69,70,71,72,75,76,77,78,79,80,81,84,85,86,87,88,89,90,91,92,93,94,95,98,99,100,101,102,103,106,107,108,109,110,111,114,115,116,117,118,119"
+elif [ "$PPN" == "116" ]
+then
+    VM_CORE_LIST=$(echo "for (i=0;i<104;i+=4) for (j=0;j<4;j++) i+j" | bc | sed -z 's/\n/,/g;s/,$/\n/')
+    VM_CORE_LIST2=$(echo "for (i=105;i<120;i+=4) for (j=0;j<3;j++) i+j" | bc | sed -z 's/\n/,/g;s/,$/\n/')
+    VM_CORE_LIST="$VM_CORE_LIST,$VM_CORE_LIST2"
+elif [ "$PPN" == "120" ]
+then
+    VM_CORE_LIST=$(echo "for (i=0;i<120;i+=4) for (j=0;j<4;j++) i+j" | bc | sed -z 's/\n/,/g;s/,$/\n/')
+else
+    echo "PPN: $PPN does not have a defined pinning list. Using all 120 cores"
+    VM_CORE_LIST=$(echo "for (i=0;i<120;i+=4) for (j=0;j<4;j++) i+j" | bc | sed -z 's/\n/,/g;s/,$/\n/')
+fi
+
+if [ "$OMP_NUM_THREAD" == "4" ]
+then
+     mpi_thread_args="-genv I_MPI_PIN_DOMAIN 4:compact -genv I_MPI_PIN on"
+elif [ "$OMP_NUM_THREAD" == "3" ]
+then
+    CORE_EXCLUDE_LIST=$(echo "for (i=0;i<120;i+=4) for (j=0;j<1;j++) i+j" | bc | sed -z 's/\n/,/g;s/,$/\n/')
+    mpi_thread_args="-genv I_MPI_PIN_DOMAIN 3:compact -genv I_MPI_PIN on -gen I_MPI_PIN_PROCESSOR_EXCLUDE_LIST=${CORE_EXCLUDE_LIST}"
+elif [ "$OMP_NUM_THREAD" == "2" ]
+then
+    CORE_EXCLUDE_LIST=$(echo "for (i=0;i<120;i+=4) for (j=0;j<2;j++) i+j" | bc | sed -z 's/\n/,/g;s/,$/\n/')
+    mpi_thread_args="-genv I_MPI_PIN_DOMAIN 2:compact -genv I_MPI_PIN on -gen I_MPI_PIN_PROCESSOR_EXCLUDE_LIST=${CORE_EXCLUDE_LIST}"
+else
+     mpi_thread_args=""
+fi
+
+echo "------------------------------------------------------"
+echo "PBS job ID           :" $PBS_JOBID
+echo "PBS job name         :" $PBS_JOBNAME
+echo "PBS queue            :" $PBS_QUEUE
+echo "PBS working directory:" $PBS_O_WORKDIR
+echo "NODES           =" $NODES
+echo "CORES           =" $CORES
+echo "OMP_NUM_THREADS =" $OMP_NUM_THREADS
+echo "------------------------------------------------------"
+cat $PBS_NODEFILE
+echo "------------------------------------------------------"
+
+# Define the paths
+ap="/apps/altair_2021/altair/hwcfdsolvers/acusolve/linux64/bin"
+export PATH=${ap}:${PATH}
+export LD_LIBRARY_PATH="/apps/altair_2021/altair/hwcfdsolvers/acusolve/linux64/fv/lib/linux_amd64/batchlibs:$LD_LIBRARY_PATH"
+
+##------Run the job---------
+EXECUTABLE=acuRun
+echo $PATH
+which $EXECUTABLE
+mpi_options="-genv I_MPI_PIN_PROCESSOR_LIST=$VM_CORE_LIST"
+ARGS="-pdir $BASE_DIR -nt $OMP_NUM_THREADS -mp impi -pbs -nsd ${CORES} -vmp impi -vnp 0 -do all "
+echo "${EXECUTABLE} ${ARGS}"
+if [ "$OMP_NUM_THREADS" == "1" ]
+then
+    ${EXECUTABLE} ${ARGS} -mpirun_options "$mpi_options"
+elif [ "$OMP_NUM_THREADS" == "2"  ] || [ "$OMP_NUM_THREADS" == "3" ] || [ "$OMP_NUM_THREADS" == "4" ]
+then
+    ${EXECUTABLE} ${ARGS} -mpirun_options "$mpi_thread_args -np ${CORES}"
+else
+    echo "Unsupported number of OMP_NUM_THREADS: $OMP_NUM_THREADS"
+fi
