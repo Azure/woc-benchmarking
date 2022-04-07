@@ -7,6 +7,7 @@ import sys
 import os
 import logging as log
 import argparse
+import numpy as np
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -64,9 +65,12 @@ for logfile in files:
     processor = ""
     mpi = ""
     tset = ""
+    tefet = ""
     fset = ""
+    fefet = ""
     tet = ""
     ppn = 0
+    IntNodeFrac = ""
    
     for x,line in enumerate(tmp_lines):
         if line.find("acuPrep:                    Problem =") != -1:
@@ -77,22 +81,28 @@ for logfile in files:
             nt = line.split("=")[1].strip()
         elif line.find("acuSolve-impi:       Message passing type =") != -1:
             mpi = line.split("=")[1].strip()
+        elif line.find("acuSolve-impi:    Interface-node fraction =") != -1:
+             IntNodeFrac = line.split("=")[1].strip()
         elif line.find("   Solution  CPU/Elapse time=") != -1:
             tmp = line.split("=")[1].strip()
             if tmp_lines[x-3].find("flow") != -1:
                 fset = tmp.split()[1].strip()
+                tmp2 = tmp_lines[x-1].split("=")[1].strip()
+                fefet = tmp2.split()[1].strip()
             elif tmp_lines[x-3].find("turbulence") != -1:
                 tset = tmp.split()[1].strip()
+                tmp2 = tmp_lines[x-1].split("=")[1].strip()
+                tefet = tmp2.split()[1].strip()
         elif line.find(" Total CPU/Elapse time      =") != -1:
             tmp = line.split("=")[1].strip()
             tet = tmp.split()[1].strip()
 
     if problem != "":
        if problem not in data:
-           print("{}".format(problem))
+           log.debug("{}".format(problem))
            data[problem] = {}
     if mpi not in data[problem]:
-        print("{} : {} ".format(problem,mpi))
+        log.debug("{} : {} ".format(problem,mpi))
         data[problem][mpi] = {}
 
     log.debug("Log file: {}".format(logfile))
@@ -115,10 +125,14 @@ for logfile in files:
             if nodes not in data[problem][mpi][ppn][nt]:
                 data[problem][mpi][ppn][nt][nodes] = {
                     "dir": [logfile],
+                    "cores": int(ppn)*int(nodes),
                     "results": {
                         "tet": [tet],
                         "tset": [tset],
-                        "fset": [fset]
+                        "tefet": [tefet],
+                        "fset": [fset],
+                        "fefet": [fefet],
+                        "inf": [float(IntNodeFrac)]
                     }
                 }
             else:
@@ -126,145 +140,139 @@ for logfile in files:
                 data[problem][mpi][ppn][nt][nodes]["dir"].append(logfile)
                 data[problem][mpi][ppn][nt][nodes]["results"]["tet"].append(tet)
                 data[problem][mpi][ppn][nt][nodes]["results"]["tset"].append(tset)
+                data[problem][mpi][ppn][nt][nodes]["results"]["tefet"].append(tefet)
                 data[problem][mpi][ppn][nt][nodes]["results"]["fset"].append(fset)
+                data[problem][mpi][ppn][nt][nodes]["results"]["fefet"].append(fefet)
+                data[problem][mpi][ppn][nt][nodes]["results"]["inf"].append(float(IntNodeFrac))
     else:
         failed_to_finish.append(logfile)
 
 
 log.debug("Failed to run to completion:\n{}".format(failed_to_finish))        
 log.debug("Data: {}".format(pp.pprint(data)))        
-sys.exit(0)
-    
-if a == True:
-    model = items[0].firstChild.data
-    if model not in data:
-        data[model] = dict()
 
-    # Find the number of hosts
-    try:
-        items = mydoc.getElementsByTagName('NumberOfHosts')
-        host_cnt = int(items[0].firstChild.data)
-        items = mydoc.getElementsByTagName('Sample')
-        cores = int(items[0].getElementsByTagName("NumberOfWorkers")[0].firstChild.data)
-        ppn = cores/host_cnt
-        if ppn not in data[model]:
-            data[model][ppn] = dict()
-        if host_cnt not in data[model][ppn]:
-            data[model][ppn][host_cnt] = dict()
-
-        # Find the run date
-        items = mydoc.getElementsByTagName('RunDate')
-        run_date = items[0].firstChild.data
-
-        # Find the chip model
-        items = mydoc.getElementsByTagName('Sample')
-        total_elapsed_time = items[0].getElementsByTagName("TotalElapsedTime")[0].firstChild.data
-        sample_elapsed_time = items[0].getElementsByTagName("SampleElapsedTime")[0].firstChild.data
-        number_of_sample_steps = items[0].getElementsByTagName("NumberOfSampleSteps")[0].firstChild.data
-        log.debug("Cores: {}".format(cores))
-        if cores not in data[model][ppn][host_cnt]:
-            data[model][ppn][host_cnt][cores] = dict()
-            data[model][ppn][host_cnt][cores]["TotalElapsedTime"] = list()
-            data[model][ppn][host_cnt][cores]["SampleElapsedTime"] = list()
-            data[model][ppn][host_cnt][cores]["AverageElapsedTime"] = list()
-            data[model][ppn][host_cnt][cores]["RunDate"] = list()
-            data[model][ppn][host_cnt][cores]["CalcSpeedup"] = list()
-            data[model][ppn][host_cnt][cores]["CalcParallel_Eff"] = list()
-        
-        # Add the data points
-        data[model][ppn][host_cnt][cores]["TotalElapsedTime"].append(float('{:0.2f}'.format(float(total_elapsed_time))))
-        data[model][ppn][host_cnt][cores]["SampleElapsedTime"].append(float('{:0.2f}'.format(float(sample_elapsed_time))))
-        data[model][ppn][host_cnt][cores]["AverageElapsedTime"].append(float('{:0.2f}'.format(float(sample_elapsed_time)/float(number_of_sample_steps))))
-        data[model][ppn][host_cnt][cores]["RunDate"].append('{:.10}'.format(run_date))
-
-        # Find the chip model
-        items = mydoc.getElementsByTagName('ChipModel')
-        chip_model = items[0].firstChild.data
-        if chip_model not in data[model][ppn][host_cnt][cores]:
-            data[model][ppn][host_cnt][cores]["Chip Model"] = chip_model
-
-    
-    except:
-        log.warning("Job Failed - File name: %s" % xmlfile)
-        if args.logging.lower() == "debug":
-            status=traceback.print_exc(file=sys.stdout)
-        #break
-        
-#pp = pprint.PrettyPrinter(indent=4)
-#pp.pprint(data)
-
+# Process the data
 results = dict()
 # Calculate the equivalent_serial_time
 for model in data:
-    for ppn in data[model]:
-        log.debug("Model: {}".format(model))
-        min_nodes=min(list(data[model][ppn].keys()))
-        log.debug("Min Node Count: {}".format(min_nodes))
-        min_core_cnt=min(data[model][ppn][min_nodes].keys())
-        log.debug("Min Core Count: {}".format(min_core_cnt))
-        # Calculate the equivalent serial time
-        sample_times = data[model][ppn][min_nodes][min_core_cnt]["SampleElapsedTime"]
-        min_time = min(sample_times)
-        max_time = max(sample_times)
-        log.debug("Max: {}\tMin: {}".format(max_time,min_time))
-        est = min_core_cnt*min_time
-        log.debug("Equivalent Serial Time: {}".format(est))
+    log.debug("Model: {}".format(model))
+    for mpi in data[model]:
+        log.debug("MPI: {}".format(mpi))
+        for ppn in data[model][mpi]:
+            log.debug("PPN: {}".format(ppn))
+            for nt in data[model][mpi][ppn]:
+                log.debug("Threads: {}".format(nt))
+                for nodes in data[model][mpi][ppn][nt]:
+                    log.debug("Nodes: {}".format(nodes))
+                    min_nodes=min(list(data[model][mpi][ppn][nt].keys()))
+                    log.debug("Min Node Count: {}".format(min_nodes))
+                    min_core_cnt=data[model][mpi][ppn][nt][min_nodes]["cores"]
+                    log.debug("Min Core Count: {}".format(min_core_cnt))
 
-        # Setup results
-        if model not in results:
-            results[model] = dict()
+                    # Calculate the equivalent serial time
+                    log.debug("Current: {}".format(data[model][mpi][ppn][nt][min_nodes]))
+                    tet_sample_times = data[model][mpi][ppn][nt][min_nodes]["results"]["tet"]
+                    tset_sample_times = data[model][mpi][ppn][nt][min_nodes]["results"]["tset"]
+                    tefet_sample_times = data[model][mpi][ppn][nt][min_nodes]["results"]["tefet"]
+                    fset_sample_times = data[model][mpi][ppn][nt][min_nodes]["results"]["fset"]
+                    fefet_sample_times = data[model][mpi][ppn][nt][min_nodes]["results"]["fefet"]
+                    sample_times = []
+                    for x,val in enumerate(tset_sample_times):
+                        sample_times.append(float(tset_sample_times[x])+float(tefet_sample_times[x])+float(fset_sample_times[x])+float(fefet_sample_times[x]))
+                    min_time = min(sample_times)
+                    max_time = max(sample_times)
+                    log.debug("Max: {}\tMin: {}".format(max_time,min_time))
+                    est = min_core_cnt*min_time
+                    log.debug("Equivalent Serial Time: {}".format(est))
 
-        # Calculate Speedup for each run
-        host_cnt_list = list(data[model][ppn].keys())
-        host_cnt_list.sort()
-        for host_cnt in host_cnt_list:
-            core_cnt_list = list(data[model][ppn][host_cnt].keys())
-            core_cnt_list.sort()
+                    # Setup results
+                    if model not in results:
+                        results[model] = dict()
+                    if mpi not in results[model]:
+                        results[model][mpi] = dict()
+                    if ppn not in results[model][mpi]:
+                        results[model][mpi][ppn] = dict()
+                    if nt not in results[model][mpi][ppn]:
+                        results[model][mpi][ppn][nt] = dict()
 
-            for core_cnt in core_cnt_list:
+                    # Calculate Speedup for each run
+                    node_cnt_list = list(data[model][mpi][ppn][nt].keys())
+                    node_cnt_list.sort()
+                    for node_cnt in node_cnt_list:
+                        core_cnt = data[model][mpi][ppn][nt][node_cnt]["cores"]
+                        log.debug("Hosts: {}, Core Count: {}, PPN: {}".format(node_cnt, core_cnt, ppn))
+                        tset_sample_times = data[model][mpi][ppn][nt][node_cnt]["results"]["tset"]
+                        tefet_sample_times = data[model][mpi][ppn][nt][node_cnt]["results"]["tefet"]
+                        fset_sample_times = data[model][mpi][ppn][nt][node_cnt]["results"]["fset"]
+                        fefet_sample_times = data[model][mpi][ppn][nt][node_cnt]["results"]["fefet"]
+                        IntNodeFrac_times = data[model][mpi][ppn][nt][node_cnt]["results"]["inf"]
+                        sample_times = []
+                        
+                        log.debug("{}".format(data[model][mpi][ppn][nt][node_cnt]))
+                        log.debug("{}".format(fset_sample_times))
+                        log.debug("{}".format(fefet_sample_times))
+                        log.debug("{}".format(tset_sample_times))
+                        log.debug("{}".format(tefet_sample_times))
+                        for x,val in enumerate(tset_sample_times):
+                            sample_times.append(float(tset_sample_times[x])+float(tefet_sample_times[x])+float(fset_sample_times[x])+float(fefet_sample_times[x]))
 
-                log.debug("Hosts: {}, Core Count: {}, PPN: {}".format(host_cnt, core_cnt, core_cnt/host_cnt))
-                sample_times = data[model][ppn][host_cnt][core_cnt]["SampleElapsedTime"]
-                min_time = min(sample_times)
-                max_time = max(sample_times)
-                log.debug("Max: {}\tMin: {}".format(max_time,min_time))
-                et_i = min_time
-                speedup = est / et_i
-                par_eff = 100*(est / (core_cnt * et_i))
-                ppn = core_cnt/host_cnt
-                #print("Hosts: {:6}, CoreCount: {:6}, PPN: {:4}, Speedup: {:8.2f}, ParallelEff: {:>5.1f}".format(host_cnt, core_cnt, ppn, speedup, par_eff))
-            
-                # Setup the results dictionary
-                if ppn not in results[model]:
-                    results[model][ppn] = dict()
-                if host_cnt not in results[model][ppn]:
-                    results[model][ppn][host_cnt] = dict()
-                results[model][ppn][host_cnt]["Cores"] = core_cnt
-                results[model][ppn][host_cnt]["Speedup"] = speedup
-                results[model][ppn][host_cnt]["ParEff"] = par_eff
-                results[model][ppn][host_cnt]["SampleElapsedTime"] = min(sample_times)
+                        min_time = min(sample_times)
+                        max_time = max(sample_times)
+                        avg_time = np.average(sample_times)
+                        avg_inf = np.average(IntNodeFrac_times)
+                        stdev_time = np.std(sample_times, ddof=1)
+                        log.debug("Max: {}\tMin: {}".format(max_time,min_time))
+                        et_i = min_time
+                        speedup = est / et_i
+                        par_eff = 100*(est / (core_cnt * et_i))
+                        ppn = core_cnt/node_cnt
+                        log.debug("Hosts: {:6}, CoreCount: {:6}, PPN: {:4}, Speedup: {:8.2f}, ParallelEff: {:>5.1f}".format(node_cnt, core_cnt, ppn, speedup, par_eff))
+                        
+                        # Setup the results dictionary
+                        if node_cnt not in results[model][mpi][ppn][nt]:
+                            results[model][mpi][ppn][nt][node_cnt] = dict()
+                        results[model][mpi][ppn][nt][node_cnt]["Cores"] = core_cnt
+                        results[model][mpi][ppn][nt][node_cnt]["Speedup"] = speedup
+                        results[model][mpi][ppn][nt][node_cnt]["ParEff"] = par_eff
+                        results[model][mpi][ppn][nt][node_cnt]["MinSolverElapsedTime"] = min_time
+                        results[model][mpi][ppn][nt][node_cnt]["MaxSolverElapsedTime"] = max_time
+                        results[model][mpi][ppn][nt][node_cnt]["AvgSolverElapsedTime"] = avg_time
+                        results[model][mpi][ppn][nt][node_cnt]["StdSolverElapsedTime"] = stdev_time
+                        results[model][mpi][ppn][nt][node_cnt]["AvgIntNodeFrac"] = avg_inf
+                        results[model][mpi][ppn][nt][node_cnt]["ResultCount"] = len(sample_times)
 
 # Print out the results
 for model in results:
-    ppn_list = list(results[model].keys())
-    ppn_list.sort()
+    mpi_list = list(results[model].keys())
+    mpi_list.sort()
     log.info("Model: {}".format(model))
-    log.info("PPN List: {}".format(ppn_list))
+    for mpi in results[model]:
+        outfilename = "acusolve_{}_{}.csv".format(model,mpi)
+        log.info("MPI: {}".format(mpi))
+        ppn_list = list(results[model][mpi].keys())
+        ppn_list.sort()
+        log.info("PPN List: {}".format(ppn_list))
 
-    outfilename = "starccm_bm_%s.csv" % model
-    with open(outfilename, "w") as outfile:
-        line = "{:>7} {:>7} {:>5} {:>9} {:>9} {:>13}".format("Hosts,", "Cores,", "PPN,", "SETime,", "SpeedUp,", "ParallelEff,")
-        log.info(line)
-        outfile.write(line + "\n")
-        for ppn in ppn_list:
-            #print("PPN: {}".format(ppn))
-            host_cnt_list = list(results[model][ppn].keys())
-            host_cnt_list.sort()
-            for host_cnt in host_cnt_list:
-                cores = results[model][ppn][host_cnt]["Cores"]
-                speedup = results[model][ppn][host_cnt]["Speedup"]
-                par_eff = results[model][ppn][host_cnt]["ParEff"]
-                sample_elapsed_time = results[model][ppn][host_cnt]["SampleElapsedTime"]
-                line = "{:6}, {:6}, {:4}, {:8.2f}, {:8.2f}, {:>12.1f}".format(host_cnt, cores, ppn, sample_elapsed_time, speedup, par_eff)
-                log.info(line)
-                outfile.write(line + "\n")
+        with open(outfilename, "w") as outfile:
+            line = "{:>7} {:>7} {:>5} {:>8} {:>8} {:>9} {:>9} {:>9} {:>9} {:>9} {:>13}".format("Hosts,", "Cores,", "PPN,", "Results,", "AvgINF,", "AvgTime,", "MinTime,", "MaxTime,", "Stdev,", "SpeedUp,", "ParallelEff,")
+            log.info(line)
+            outfile.write(line + "\n")
+            for ppn in ppn_list:
+                nt_list = list(results[model][mpi][ppn].keys())
+                nt_list.sort()
+                for nt in nt_list:
+                    nodes_list = list(results[model][mpi][ppn][nt].keys())
+                    nodes_list.sort()
+                    for nodes in nodes_list:
+                        cores = results[model][mpi][ppn][nt][nodes]["Cores"]
+                        speedup = results[model][mpi][ppn][nt][nodes]["Speedup"]
+                        par_eff = results[model][mpi][ppn][nt][nodes]["ParEff"]
+                        min_elapsed_time = results[model][mpi][ppn][nt][nodes]["MinSolverElapsedTime"]
+                        max_elapsed_time = results[model][mpi][ppn][nt][nodes]["MaxSolverElapsedTime"]
+                        avg_elapsed_time = results[model][mpi][ppn][nt][nodes]["AvgSolverElapsedTime"]
+                        avg_int_node_frac = results[model][mpi][ppn][nt][nodes]["AvgIntNodeFrac"]
+                        stdev_time = results[model][mpi][ppn][nt][nodes]["StdSolverElapsedTime"]
+                        res_cnt = results[model][mpi][ppn][nt][nodes]["ResultCount"]
+                        line = "{:6}, {:6}, {:4}, {:7}, {:7.2f}, {:8.2f}, {:8.2f}, {:8.2f}, {:8.2f}, {:8.2f}, {:>12.1f}".format(nodes, cores, ppn, res_cnt, avg_int_node_frac, avg_elapsed_time, min_elapsed_time, max_elapsed_time, stdev_time, speedup, par_eff)
+                        log.info(line)
+                        outfile.write(line + "\n")

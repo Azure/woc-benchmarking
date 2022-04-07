@@ -1,7 +1,7 @@
 #!/bin/bash
 ## acuRun pbs submission script
 #
-#PBS -l walltime=02:00:00
+#PBS -l walltime=08:00:00
 #PBS -l select=16:ncpus=120:mem=400gb:mpiprocs=90:ompthreads=1
 #PBS -N acusolve
 
@@ -105,3 +105,6 @@ then
 else
     echo "Unsupported number of OMP_NUM_THREADS: $OMP_NUM_THREADS"
 fi
+
+# Remove ACUSIM.DIR
+rm -rf ACUSIM.DIR
