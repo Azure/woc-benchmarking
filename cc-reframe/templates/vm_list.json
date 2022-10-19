@@ -1,0 +1,72 @@
+{
+    "cycle_config": [],
+    "default_cycle_projects": ["cluster-init cc-reframe:default:0.1.0"],
+    "max_cores": 1000,
+    "db_url": "cc-reframe-slurm-job-acct-db.mariadb.database.azure.com",
+    "db_user": "ccdbadmin@cc-reframe-slurm-job-acct-db",
+    "db_password": "db_password",
+    "vm_image_name": "OpenLogic:CentOS-HPC:7_9-gen2:latest",
+    "partitions": {
+        "hb": {
+	    "name": "Standard_HB60rs",
+            "number_of_vms": 16,
+            "cores_per_vm": 60,
+            "cycle_config": ["slurm.default_partition = true"]
+	},
+        "hbv2": {
+	    "name": "Standard_HB120rs_v2",
+            "number_of_vms": 16,
+            "cores_per_vm": 120,
+            "cycle_config": ["slurm.dampen_memory = 7"]
+	},
+        "hbv3": {
+	    "name": "Standard_HB120rs_v3",
+            "number_of_vms": 16,
+            "cores_per_vm": 120
+	},
+        "hc": {
+	    "name": "Standard_HC44rs",
+            "number_of_vms": 16,
+            "cores_per_vm": 44
+	},
+        "ncv3": {
+	    "name": "Standard_NC24rs_v3",
+            "number_of_vms": 16,
+            "cores_per_vm": 24,
+            "vm_image_name": "microsoft-dsvm:ubuntu-hpc:1804:latest"
+	},
+        "nct4v3": {
+	    "name": "Standard_NC64as_T4_v3",
+            "number_of_vms": 16,
+            "cores_per_vm": 64,
+            "ib": false,
+            "vm_image_name": "microsoft-dsvm:ubuntu-hpc:1804:latest"
+	},
+        "nca100v4": {
+	    "name": "Standard_NC96ads_A100_v4",
+            "number_of_vms": 16,
+            "cores_per_vm": 96,
+            "ib": false,
+            "vm_image_name": "microsoft-dsvm:ubuntu-hpc:1804:latest"
+        },
+        "ndv2": {
+	    "name": "Standard_ND40rs_v2",
+            "number_of_vms": 16,
+            "cores_per_vm": 40,
+            "vm_image_name": "microsoft-dsvm:ubuntu-hpc:1804:latest"
+	},
+        "ndv4": {
+	    "name": "Standard_ND96asr_v4",
+            "number_of_vms": 4,
+            "cores_per_vm": 96,
+            "vm_image_name": "microsoft-dsvm:ubuntu-hpc:1804:latest"
+	},
+        "ndmv4": {
+	    "name": "Standard_ND96amsr_a100_v4",
+            "number_of_vms": 4,
+            "cores_per_vm": 96,
+            "cycle_config": ["slurm.dampen_memory = 10"],
+            "vm_image_name": "microsoft-dsvm:ubuntu-hpc:1804:latest"
+	}
+    }
+}	

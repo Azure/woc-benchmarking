@@ -1,0 +1,20 @@
+#	modified:   cc-reframe/build/cc-reframe/default/cluster-init/scripts/098_install_reframe.sh
+#	modified:   cc-reframe/build/cc-reframe/default/cluster-init/scripts/099_run_reframe.sh
+#	modified:   cc-reframe/specs/default/cluster-init/scripts/098_install_reframe.sh
+#	modified:   cc-reframe/specs/default/cluster-init/scripts/099_run_reframe.sh
+#	modified:   cc-reframe/specs/scheduler/cluster-init/files/common.sh
+#	modified:   cc-reframe/specs/scheduler/cluster-init/files/slurm/run_reframe_prologue.sh
+#	modified:   cc-reframe/specs/scheduler/cluster-init/scripts/098_install_reframe.sh
+#	modified:   cc-reframe/templates/cc-reframe-mod-821.txt
+#	modified:   cc-reframe/templates/generate_cc_file_from_vm_list.py
+#
+# Untracked files:
+#   (use "git add <file>..." to include in what will be committed)
+#
+#	cc-reframe.tgz
+#	cc-reframe/build/cc-reframe/default/cluster-init/files/common.sh
+#	cc-reframe/build/cc-reframe/scheduler/
+#	cc-reframe/specs/default/cluster-init/files/common.sh
+#	cc-reframe/templates/rfscus.prop
+#	cc-reframe/templates/vm_list_local.json
+
