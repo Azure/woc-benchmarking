@@ -19,7 +19,10 @@ then
 elif [ "$version" == "centos-8" ]
 then
     reframe_cfg="azure_centos_8.py"
-elif [ "$version" == "ubuntu-20" ]
+elif [ "$version" == "ubuntu-18.04" ]
+then
+    reframe_cfg="azure_ubuntu_18.py"
+elif [ "$version" == "ubuntu-20.04" ]
 then
     reframe_cfg="azure_ubuntu_20.py"
 fi

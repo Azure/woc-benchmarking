@@ -9,15 +9,8 @@ then
     echo "$ID-${majVer[0]}"
 elif [ "$ID" == "ubuntu" ]
 then
-    echo "ID: $ID"
+    echo "ID: ${ID}-${VERSION_ID}"
 elif [ "$ID" == "centos" ]
 then
-    echo -n "$ID" 
-    if [ "$VERSION_ID" == "7" ]
-    then
-        echo "-$VERSION_ID"
-    elif [ "$VERSION_ID" == "8" ]
-    then
-        echo "-$VERSION_ID"
-    fi
+    echo -n "${ID}-${VERSION_ID}" 
 fi
