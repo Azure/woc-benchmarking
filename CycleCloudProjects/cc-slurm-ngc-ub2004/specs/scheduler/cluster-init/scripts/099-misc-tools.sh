@@ -20,4 +20,4 @@ sudo apt-get -y install python3-pip
 sudo pip3 install gdown
 
 # install clustershell
-sudo apt install clustershell
+sudo apt install -y clustershell
