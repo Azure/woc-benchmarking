@@ -11,9 +11,8 @@ then
 else
     MNT_POINT=/mnt/resource_nvme
     mkdir -p $MNT_POINT
-    # Needed incase something did not unmount as expected. This will delete any data that may be left behind
-    sudo umount $MNT_POINT
-    mdadm  --stop /dev/md*
+    
+    # Create raid disk
     mdadm --create /dev/md128 -f --run --level 0 --raid-devices $NVME_DISKS $NVME_DISKS_NAME
 
     # Setup the disk
