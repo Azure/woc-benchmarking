@@ -86,7 +86,13 @@ export LD_LIBRARY_PATH=${HW_ROOT}/:$RADFLEX_PATH:$LD_LIBRARY_PATH
 echo "------------------------------------------------------"
 cmd_line='chomb; print "$_"'
 cmd_line="$cmd_line x${SLURM_NTASKS_PER_NODE}"
-scontrol show hostname $SLURM_JOB_NODELIST | perl -ne "$cmd_line" > hostfile_$SLURM_JOBID.txt
+if [[ -z $SLURM_JOB_NODELIST ]]; then
+    if [[ ! -f "hostfile_$SLURM_JOBID.txt" ]]; then
+        echo "Something is not right in this environment"
+    fi
+else
+    scontrol show hostname $SLURM_JOB_NODELIST | perl -ne "$cmd_line" > hostfile_$SLURM_JOBID.txt
+fi
 #cat hostfile_$SLURM_JOBID.txt
 echo "------------------------------------------------------"
 
