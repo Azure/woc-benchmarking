@@ -3,7 +3,7 @@
 # parameters that can be overridden
 APP_INSTALL_DIR=${APP_INSTALL_DIR:-/shared/apps}
 TMP_DIR=${TMP_DIR:-/mnt/resource}
-RADIOSS_INSTALLER_FILE=${RADIOSS_INSTALLER_FILE:-/mnt/hwSolvers2022.1_linux64.bin}
+RADIOSS_INSTALLER_FILE=${RADIOSS_INSTALLER_FILE:-/mnt/resource_nvme/hwSolvers2022.1_linux64.bin}
 #RADIOSS_HOTFIX_FILE=${RADIOSS_HOTFIX_FILE:-/mnt/hwSolvers2018.0.1_hotfix_linux64.bin}
 
 if [ ! -e $RADIOSS_INSTALLER_FILE ]; then

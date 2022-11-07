@@ -139,7 +139,7 @@ echo "------------------------------------------------------"
 
 #AZURE_IMPI_OPTIONS="-genv I_MPI_MPIRUN_CLEANUP 1 -genv I_MPI_PIN_DOMAIN auto -genv OMP_NUM_THREADS $OMP_NUM_THREADS -genv I_MPI_ADJUST_BCAST 1 -genv I_MPI_ADJUST_REDUCE 2 -genv KMP_AFFINITY verbose,scatter -genv KMP_STACKSIZE 400m -genv I_MPI_DEBUG 3 -genv I_MPI_FABRICS shm:ofa"
 
-ADDITIONAL_MPI_OPTIONS="-genv I_MPI_MPIRUN_CLEANUP 1 -genv OMP_NUM_THREADS $OMP_NUM_THREADS -genv I_MPI_ADJUST_BCAST 1 -genv I_MPI_ADJUST_REDUCE 2 -genv KMP_AFFINITY verbose,scatter -genv KMP_STACKSIZE 400m"
+ADDITIONAL_MPI_FLAGS="-genv I_MPI_MPIRUN_CLEANUP 1 -genv OMP_NUM_THREADS $OMP_NUM_THREADS -genv I_MPI_ADJUST_BCAST 1 -genv I_MPI_ADJUST_REDUCE 2 -genv KMP_AFFINITY verbose,scatter -genv KMP_STACKSIZE 400m"
 
 echo "$MPI_BIN/mpirun -r ssh -machinefile hostfile_$SLURM_JOBID.txt $AZURE_IMPI_OPTIONS $ADDITIONAL_MPI_OPTIONS -genv LD_LIBRARY_PATH $MPILIB:$LD_LIBRARY_PATH -genv PATH $MPIBIN:$PATH -n $NMPI $engine  -i $d01"
 
@@ -147,8 +147,8 @@ $MPI_BIN/mpirun \
 	-r ssh \
 	-machinefile hostfile_$SLURM_JOBID.txt \
 	-genv LD_LIBRARY_PATH $MPI_LIB:$LD_LIBRARY_PATH \
-	$AZURE_IMPI_OPTIONS \
-	$ADDITIONAL_MPI_OPTIONS \
+	$AZURE_IMPI_FLAGS \
+	$ADDITIONAL_MPI_FLAGS \
 	-genv PATH $MPI_BIN:$PATH \
 	-n $NMPI \
 	$engine  -i $d01
