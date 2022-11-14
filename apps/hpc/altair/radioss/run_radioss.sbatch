@@ -52,7 +52,7 @@ VM_SKU="${VM_SKU%\"}"
 VM_SKU="${VM_SKU#\"}"
 export VM_SKU=$VM_SKU
 echo "VM SKU: $VM_SKU"
-source ../../../../utils/azure_process_pinning.sh $SLURM_TASKS_PER_NODE
+source ../../utils/azure_process_pinning.sh $SLURM_TASKS_PER_NODE
 VM_SKU="${VM_SKU/Standard_/}"
 #env | grep -i azure
 #env | grep -i slurm
