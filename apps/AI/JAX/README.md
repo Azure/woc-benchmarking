@@ -61,6 +61,7 @@ Deploy and set up a CycleCloud cluster (Azure CycleCloud 8.2 and slurm 2.6.5) of
     #For XL models, use BS_PER_GPU=8
     T5_SIZE=xl BS_PER_GPU=8 sbatch -N 1 run.slurm
     ``` 
-## Verification
-1. Once your slurm job is completed, open the output log file and 
+## Reviewing the results
+1. Once your slurm job is completed, open the output log file and search for **[200]**.
+2. In the summary line, extract the **timing/seqs_per_second** value. That is the throughput which are measuring for the benchmarks.
 
