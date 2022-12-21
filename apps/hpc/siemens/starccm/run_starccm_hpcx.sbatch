@@ -42,17 +42,9 @@ echo "SLURM_NTASKS="$SLURM_NTASKS
 mkdir -p $SLURM_SUBMIT_DIR/$SLURM_JOBID
 cd $SLURM_SUBMIT_DIR/$SLURM_JOBID
 
-#Prep host file
-scontrol show hostname $SLURM_NODELIST | tr 'ec' 'ic'> machinefile_${SLURM_JOB_ID}
-
 NODES=$SLURM_NNODES
 PPN=$SLURM_NTASKS_PER_NODE
 CORES=$SLURM_NTASKS
-
-export LD_LIBRARY_PATH=/usr/lib:$LD_LIBRARY_PATH
-source /opt/hpcx-*-x86_64/hpcx-init.sh
-hpcx_load
-export OPENMPI_DIR=$HPCX_MPI_DIR
 
 BM_OPT="-preclear -preits 40 -nits 20 -nps $CORES"
 if [ "$CASE" = "EmpHydroCyclone_30M" ]
@@ -68,14 +60,20 @@ echo PPN=$PPN
 
 echo "Running Starccm Benchmark case : [${starccm_case}], Nodes: ${NODES} (Total Cores: ${CORES})"
 
-$WOC_BENCH_DIR/apps/hpc/utils/azure_process_pinning.sh $SLURM_NTASKS_PER_NODE
+source $WOC_BENCH_DIR/apps/hpc/utils/azure_process_pinning.sh $SLURM_NTASKS_PER_NODE
 
-if [ "$OMPI" == "intel" || "$OMPI" == "intelmpi" ]
+if [[ "$OMPI" == "intel" || "$OMPI" == "intelmpi" ]]
 then
     mppflags=$AZURE_IMPI_FLAGS
 else 
+    export LD_LIBRARY_PATH=/usr/lib:$LD_LIBRARY_PATH
+    source /opt/hpcx-*-x86_64/hpcx-init.sh
+    hpcx_load
+    export OPENMPI_DIR=$HPCX_MPI_DIR
     mppflags=$AZURE_OPENMPI_FLAGS
 fi 
+
+echo "mppflags: $mppflags"
 
 starccm+ \
     -v \
