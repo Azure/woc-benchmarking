@@ -703,13 +703,13 @@ Order = 20
         [[[parameter configuration_slurm_accounting_url]]]
         Label = Slurm DBD URL
         Description = URL of the database to use for Slurm job accounting
-        DefaultValue = "localhost"
+        DefaultValue = ""
         Conditions.Excluded := configuration_slurm_accounting_enabled isnt true
 
         [[[parameter configuration_slurm_accounting_user]]]
         Label = Slurm DBD User
         Description = User for Slurm DBD admin
-        DefaultValue = "root"
+        DefaultValue = ""
         Conditions.Excluded := configuration_slurm_accounting_enabled isnt true
 
         [[[parameter configuration_slurm_accounting_password]]]
