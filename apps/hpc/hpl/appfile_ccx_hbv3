@@ -1,0 +1,16 @@
+-np 1 ./xhpl_ccx.sh 0 0-5 6
+-np 1 ./xhpl_ccx.sh 0 8-13 6
+-np 1 ./xhpl_ccx.sh 0 16-21 6
+-np 1 ./xhpl_ccx.sh 0 24-29 6
+-np 1 ./xhpl_ccx.sh 1 30-35 6
+-np 1 ./xhpl_ccx.sh 1 38-43 6
+-np 1 ./xhpl_ccx.sh 1 46-51 6
+-np 1 ./xhpl_ccx.sh 1 54-59 6
+-np 1 ./xhpl_ccx.sh 2 60-65 6
+-np 1 ./xhpl_ccx.sh 2 68-73 6
+-np 1 ./xhpl_ccx.sh 2 76-81 6
+-np 1 ./xhpl_ccx.sh 2 84-89 6
+-np 1 ./xhpl_ccx.sh 3 90-95 6
+-np 1 ./xhpl_ccx.sh 3 98-103 6
+-np 1 ./xhpl_ccx.sh 3 106-111 6
+-np 1 ./xhpl_ccx.sh 3 114-119 6
