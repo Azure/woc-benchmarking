@@ -29,6 +29,12 @@
             "number_of_vms": 16,
             "cores_per_vm": 44
 	},
+        "nvv5": {
+	    "name": "Standard_NV72_A10_v5",
+            "number_of_vms": 70,
+            "cores_per_vm": 72,
+            "vm_image_name": "microsoft-dsvm:ubuntu-hpc:1804:latest"
+	},
         "ncv3": {
 	    "name": "Standard_NC24rs_v3",
             "number_of_vms": 16,

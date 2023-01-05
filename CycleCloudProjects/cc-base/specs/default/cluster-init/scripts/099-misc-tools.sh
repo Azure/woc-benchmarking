@@ -9,6 +9,7 @@ sudo mv azcopy_linux_amd64_*/azcopy /usr/bin/azcopy
 sudo chmod 755 /usr/bin/azcopy
 sudo chown root:root /usr/bin/azcopy
 
+version=`/bin/bash ${CYCLECLOUD_SPEC_PATH}/files/common.sh`
 
 if [ "$version" == "almalinux-8" ]
 then

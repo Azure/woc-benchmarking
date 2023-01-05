@@ -243,7 +243,7 @@ def main():
         db_user = vm_data["db_user"]
     if "db_password" in vm_data:
         db_passwd = vm_data["db_password"]
-    create_cc_template("cc-reframe-mod-821.txt",new_partitions,new_machine_types,new_max_cores,new_image_names,new_init_specs,db_url,db_user,db_passwd)
+    create_cc_template("cc-reframe-mod-822.txt",new_partitions,new_machine_types,new_max_cores,new_image_names,new_init_specs,db_url,db_user,db_passwd)
 
 if __name__ == "__main__":
     main()
