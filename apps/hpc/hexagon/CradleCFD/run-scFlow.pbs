@@ -1,0 +1,57 @@
+#!/bin/bash
+
+#PBS -l select=4:ncpus=120:mpiprocs=96:mem=420gb
+#PBS -l place=excl
+#PBS -N scFlow
+#PBS -j oe
+
+set -x
+
+ulimit -s unlimited
+ulimit -l unlimited
+ulimit -a
+
+sudo yum install -y python3
+
+APP_INSTALL_DIR=${APP_INSTALL_DIR:-/apps/CradleCFD2022/}
+DATA_DIR=${DATA_DIR:-/data/CradleCFD/DriveAir/density}
+CASE=${CASE:-N_EB_wM_wW_woL_cG_dens-based_steady_SST_stab23}
+
+export PATH=${APP_INSTALL_DIR}/bin:$PATH
+export MSC_LICENSE_FILE=XXXX@hosted-license.mscsoftware.com
+export CRADLE_LICENSE_FILE=XXXX@hosted-license.mscsoftware.com
+
+NODES=$(sort -u < $PBS_NODEFILE | wc -l)
+PPN=$(uniq -c < $PBS_NODEFILE | tail -n1 | awk '{print $1}')
+CORES=$(wc -l <$PBS_NODEFILE)
+
+cd $PBS_O_WORKDIR
+mkdir ${NODES}N_${PPN}PPN.$PBS_JOBID
+cd ${NODES}N_${PPN}PPN.$PBS_JOBID
+ln -s ${DATA_DIR}/* .
+
+cat $PBS_NODEFILE | sort -u > hostfile
+export OMPI_MCA_coll=^hcoll
+sed -i "s/$/:$PPN/g" hostfile
+export HOSTFILE=hostfile
+
+if [ "$PPN" == "120" ]; then
+	export I_MPI_PIN_PROCESSOR_LIST="0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119"
+elif [ "$PPN" == "96" ]; then
+	export I_MPI_PIN_PROCESSOR_LIST="0,1,2,3,4,5,8,9,10,11,12,13,16,17,18,19,20,21,24,25,26,27,28,29,30,31,32,33,34,35,38,39,40,41,42,43,46,47,48,49,50,51,54,55,56,57,58,59,60,61,62,63,64,65,68,69,70,71,72,75,76,77,78,79,80,81,84,85,86,87,88,89,90,91,92,93,94,95,98,99,100,101,102,103,106,107,108,109,110,111,114,115,116,117,118,119"
+elif [ "$PPN" == "64" ]; then
+	export I_MPI_PIN_PROCESSOR_LIST="0,1,2,3,8,9,10,11,16,17,18,19,24,25,26,27,30,31,32,33,38,39,40,41,46,47,48,49,54,55,56,57,60,61,62,63,68,69,70,71,76,77,78,79,84,85,86,87,90,91,92,93,98,99,100,101,106,107,108,109,114,115,116,117"
+else
+	echo "NO proper binding found"
+fi
+
+export KMP_AFFINITY=disabled
+export MKL_DEBUG_CPU_TYPE=5
+export I_MPI_OFI_PROVIDER=mlx
+export I_MPI_FABRICS=shm:ofi
+export I_MPI_FALLBACK=0
+export I_MPI_DEBUG=10
+
+scflowsol2022 -msc ${CASE}.sph $CORES -machinefile hostfile -genvall  | tee scFlow.log
+
+rm *rph
