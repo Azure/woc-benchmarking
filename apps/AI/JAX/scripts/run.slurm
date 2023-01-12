@@ -13,16 +13,16 @@ export CUDA_DEVICE_ORDER=PCI_BUS_ID
 export NCCL_IB_PCI_RELAXED_ORDERING=1
 export NCCL_SOCKET_IFNAME=eth0
 export NCCL_TOPO_FILE=/microsoft/ndv4-topo.xml
+export PYTHONPATH=/t5x/
 
-# Start from JAX EA container
-export CONTAINERS="--container-image=nvcr.io/nvdlfwea/jax/jax:22.10-py3 --container-mounts=/mnt/resource_nvme/jax:/workdir,/opt/microsoft/:/microsoft --container-name=nvidia_$RANDOM"
+# Start from TF2 container
+export CONTAINERS="--container-image=nvcr.io/nvidia/tensorflow:22.11-tf2-py3 --container-mounts=$JAX_SCRATCH_SPACE:/workdir,/opt/microsoft/:/microsoft --container-name=nvidia_$RANDOM"
 
-# Download and install T5X
-# This can be T5X upstream when NVIDIA's MR is merged
-srun $CONTAINERS --ntasks-per-node 1 bash -c 'pip install tensorflow-cpu==2.10.1 && git clone https://github.com/SahilJain314/t5x /t5x && pip install /t5x && pip install zstandard===0.19.0 jsonlines==3.1.0 pysimdjson==5.0.2 orbax==0.0.14'
+# Download and install JAX + T5X
+srun $CONTAINERS --ntasks-per-node 1 bash -c 'pip install jax[cuda]==0.4.1 -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html && git clone https://github.com/google-research/t5x.git /t5x && cd /t5x && git checkout ef48f3 && pip install -e . && pip install -r ./t5x/contrib/gpu/scripts_gpu/pile_requirements.txt'
 
 # Run training
-export TRAIN="python3 -u /t5x/t5x/train.py --gin_file=/t5x/t5x/examples/gpu_t5/t5_1_1/examples/${T5_SIZE}_pile_pretrain.gin --gin.MODEL_DIR=\"/workdir/model_dir/$(date --iso-8601=seconds)/\" --gin.network.T5Config.dtype=\"bfloat16\" --gin.TRAIN_STEPS=200 --tfds_data_dir=/workdir/data_dir/ --gin.train/utils.DatasetConfig.batch_size=$(($BS_PER_GPU*8*$SLURM_JOB_NUM_NODES)) --gin.CheckpointConfig.save=None --gin.train.stats_period=100 --gin.MIXTURE_OR_TASK_NAME=\"wmt_t2t_ende_v003\""
+export TRAIN="python3 -u /t5x/t5x/train.py --gin_file=/t5x/t5x/contrib/gpu/t5/t5_1_1/examples/${T5_SIZE}_pile_pretrain.gin --gin.MODEL_DIR=\"/workdir/model_dir/$(date --iso-8601=seconds)/\" --gin.network.T5Config.dtype=\"bfloat16\" --gin.TRAIN_STEPS=200 --tfds_data_dir=/workdir/data_dir/ --gin.train/utils.DatasetConfig.batch_size=$(($BS_PER_GPU*8*$SLURM_JOB_NUM_NODES)) --gin.CheckpointConfig.save=None --gin.train.stats_period=100 --gin.MIXTURE_OR_TASK_NAME=\"wmt_t2t_ende_v003\""
 
 if [ -z ${DOWNLOAD+x} ]
 then
@@ -31,6 +31,18 @@ else
         # When downloading the dataset, we should run on 1 node with 1 process
         srun $CONTAINERS -l --ntasks-per-node 1 $TRAIN
 fi
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
