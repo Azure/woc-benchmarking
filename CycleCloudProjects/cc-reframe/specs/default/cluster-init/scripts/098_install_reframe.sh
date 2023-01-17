@@ -33,8 +33,6 @@ fi
 NHC_PATH="/shared/azure_nhc"
 mkdir -p $NHC_PATH
 cd $NHC_PATH
-rm -rf reframe
-git clone https://github.com/JonShelley/reframe.git
 cd reframe
 
 python3.8 -m venv reframe_venv
