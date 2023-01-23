@@ -1,0 +1,51 @@
+#!/bin/bash
+
+#PBS -l select=4:ncpus=120:mpiprocs=96:mem=420gb
+#PBS -l place=excl
+#PBS -N scFlow
+#PBS -j oe
+
+set -x
+
+ulimit -s unlimited
+ulimit -l unlimited
+ulimit -a
+
+APP_INSTALL_DIR=${APP_INSTALL_DIR:-/apps/CradleCFD2022/}
+DATA_DIR=${DATA_DIR:-/data/CradleCFD/DriveAir/density}
+CASE=${CASE:-N_EB_wM_wW_woL_cG_dens-based_steady_SST_stab23}
+APPNS=${APPNS:-/share/home/hpcuser/woc-benchmarking/apps/hpc/utils/azure_process_pinning.sh}  #PATH to azure_process_pinning.sh script
+
+export PATH=${APP_INSTALL_DIR}/bin:$PATH
+export MSC_LICENSE_FILE=XXXX@hosted-license.mscsoftware.com
+export CRADLE_LICENSE_FILE=XXXX@hosted-license.mscsoftware.com
+
+export NODES=$(sort -u < $PBS_NODEFILE | wc -l)
+export PPN=$(uniq -c < $PBS_NODEFILE | tail -n1 | awk '{print $1}')
+export CORES=$(wc -l <$PBS_NODEFILE)
+export NTHREADS=1
+
+cd $PBS_O_WORKDIR
+mkdir ${NODES}N_${PPN}PPN.$PBS_JOBID
+cd ${NODES}N_${PPN}PPN.$PBS_JOBID
+ln -s ${DATA_DIR}/* .
+
+cat $PBS_NODEFILE | sort -u > hostfile
+export OMPI_MCA_coll=^hcoll
+sed -i "s/$/:$PPN/g" hostfile
+export HOSTFILE=hostfile
+
+source $APPNS $PPN $NTHREADS
+export I_MPI_PIN_PROCESSOR_LIST=$AZURE_PROCESSOR_LIST
+
+export KMP_AFFINITY=disabled
+export MKL_DEBUG_CPU_TYPE=5
+export I_MPI_OFI_PROVIDER=mlx
+export I_MPI_FABRICS=shm:ofi
+export I_MPI_FALLBACK=0
+export I_MPI_DEBUG=10
+
+scflowsol2022 -msc ${CASE}.sph $CORES -machinefile hostfile -genvall  | tee scFlow.log
+
+#removing the files that are unnecessary for benchmarking
+rm *rph
