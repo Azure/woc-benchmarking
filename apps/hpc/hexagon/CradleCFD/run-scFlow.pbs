@@ -35,7 +35,7 @@ export OMPI_MCA_coll=^hcoll
 sed -i "s/$/:$PPN/g" hostfile
 export HOSTFILE=hostfile
 
-source $APPNS
+source $APPNS $PPN $NTHREADS
 export I_MPI_PIN_PROCESSOR_LIST=$AZURE_PROCESSOR_LIST
 
 export KMP_AFFINITY=disabled
