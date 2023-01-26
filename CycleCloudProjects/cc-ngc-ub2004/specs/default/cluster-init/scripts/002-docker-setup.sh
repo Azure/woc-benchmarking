@@ -20,7 +20,9 @@ cd /mnt/resource
 docker volume ls -q -f driver=nvidia-docker | xargs -r -I{} -n1 docker ps -q -a -f volume={} | xargs -r docker rm -f
 
 set +e
-apt-get purge -y nvidia-docker
+echo 'N' > ~/prompt.txt
+apt-get purge -y nvidia-docker  < ~/prompt.txt
+rm -f ~/prompt.txt
 set -e
 
 # Add the package repositories
