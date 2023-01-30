@@ -19,6 +19,7 @@ Deploy and set up a CycleCloud cluster (Azure CycleCloud 8.2 and slurm 2.6.5) of
 3. Generate your NGC API key by following the [generate API key guide](https://docs.nvidia.com/ngc/ngc-overview/index.html#generating-api-key)
 4. Copy the generated API key and replace the <GENERATED API KEY> with the generated API key. Run the command below to update the enroot details - 
     ```
+    mkdir -p ~/.config/enroot
     echo "machine nvcr.io login \$oauthtoken password <GENERATED API KEY>" > ~/.config/enroot/.credentials
     ```
 
