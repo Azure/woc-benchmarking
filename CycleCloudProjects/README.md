@@ -21,13 +21,14 @@ SSH into the [VM instance](https://learn.microsoft.com/en-us/azure/cyclecloud/qs
 
 Start a new cycle cloud project:
    $> cyclecloud initialize
-   
-   $> cyclecloud project init cc-base
+   $> cyclecloud locker list
+   $> cyclecloud project upload <name obtained from running cyclecloud locker list>
 
-   $> cd woc-benchmarking/CycleCloudProjects/cc-base/templates
-   
-   $> cyclecloud import_template cc-base -f ./cc-slurm-base.txt -c slurm
+Next change directorys to cc-base and upload the cc-base project:
+   $> cd woc-benchmarking/CycleCloudProjects/cc-base
+   $> cyclecloud project upload <name obtained from running cyclecloud locker list>
 
-The newly uploaded cc-slurm template should be available when creating a new CycleCloud cluster in the web browser.
+
+The newly uploaded CycleClous Slurm template - cc-base - should be available when creating a new CycleCloud cluster in the web browser.
 
 Included in the cc-base template are several tests for validating HW, SW, single-node health, multi-node communications, and performance. These are executed on all compute VMs before they are added to the slurm cluster and ready for use.
