@@ -59,13 +59,6 @@ export mppflags="--bind-to cpulist:ordered --cpu-set $AZURE_PROCESSOR_LIST --ran
 export LD_PRELOAD=${WOC_BENCH_DIR}/libnvidia-ml.so
 export LD_LIBRARY_PATH="${WOC_BENCH_DIR}:$LD_LIBRARY_PATH"
 
-cat $PBS_NODEFILE | sort -u > hostfile.txt
-sudo yum install pssh -y
-pssh -p 4 -t 0 -i -h hostfile.txt "sudo yum install libXt libnsl libnsl2 glibc -y"
-pssh -p 4 -t 0 -i -h hostfile.txt "ulimit -s unlimited && ulimit -l unlimited && ulimit -a"
-pssh -p 4 -t 0 -i -h hostfile.txt "sudo /sbin/sysctl vm.drop_caches=3"
-pssh -p 4 -t 0 -i -h hostfile.txt "free && sync && echo 3 | sudo tee /proc/sys/vm/drop_caches && free"
-
 starccm+ \
     -np $CORES \
     -v \
