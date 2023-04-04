@@ -61,6 +61,7 @@ echo PPN=$PPN
 echo "Running Starccm Benchmark case : [${starccm_case}], Nodes: ${NODES} (Total Cores: ${CORES})"
 
 source $WOC_BENCH_DIR/apps/hpc/utils/azure_process_pinning.sh $SLURM_NTASKS_PER_NODE
+export mppflags="--bind-to cpulist:ordered --cpu-set $AZURE_PROCESSOR_LIST --rank-by slot --report-bindings -mca mca_base_env_list UCX_TLS=dc_x,sm;UCX_MAX_RNDV_RAILS=1"
 
 if [[ "$OMPI" == "intel" || "$OMPI" == "intelmpi" ]]
 then
@@ -74,6 +75,8 @@ else
 fi 
 
 echo "mppflags: $mppflags"
+export LD_PRELOAD=${WOC_BENCH_DIR}/libnvidia-ml.so
+export LD_LIBRARY_PATH="${WOC_BENCH_DIR}:$LD_LIBRARY_PATH"
 
 starccm+ \
     -v \
@@ -84,6 +87,7 @@ starccm+ \
     -mpi $OMPI \
     -cpubind off \
     -ldlibpath $LD_LIBRARY_PATH \
+    -ldpreload $LD_PRELOAD \
     -mppflags "$mppflags" \
     $STARCCM_CASE -benchmark "$BM_OPT"
 
