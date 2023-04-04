@@ -1,0 +1,86 @@
+#!/bin/bash
+
+# parameters that can be overridden
+APP_INSTALL_DIR=${APP_INSTALL_DIR:-/apps}
+DATA_DIR=${DATA_DIR:-/data/starccm}
+CASE=${CASE:-civil}
+OMPI=${OMPI:-openmpi4}
+STARCCM_VERSION=${STARCCM_VERSION:-16.04.007}
+WOC_BENCH_DIR=${WOC_BENCH_DIR:-~/woc-benchmarking}
+PODKEY="XXXXXXXXXXXXXXXXXXXX"  #Insert your podkey
+
+# PODKEY is required (pass in as environment variable)
+if [ -z "$PODKEY" ];
+then
+    echo "Error: the PODKEY environment variable is not set"
+    exit 1
+fi
+
+INSTALL_DIR=$APP_INSTALL_DIR/starccm
+STARCCM_CASE=$DATA_DIR/${CASE}.sim
+
+export PATH=$INSTALL_DIR/$STARCCM_VERSION/STAR-CCM+$STARCCM_VERSION/star/bin:$PATH
+export CDLMD_LICENSE_FILE=1999@flex.cd-adapco.com
+
+mkdir $PBS_O_WORKDIR/$PBS_JOBID
+cd $PBS_O_WORKDIR/$PBS_JOBID
+
+NODES=$(sort -u < $PBS_NODEFILE | wc -l)
+PPN=$(uniq -c < $PBS_NODEFILE | tail -n1 | awk '{print $1}')
+CORES=$(wc -l <$PBS_NODEFILE)
+
+export LD_LIBRARY_PATH=/usr/lib:$LD_LIBRARY_PATH
+source /apps/mpi/hpcx-v2.14-gcc-MLNX_OFED_LINUX-5-redhat8-cuda11-gdrcopy2-nccl2.16-x86_64/hpcx-init.sh
+hpcx_load
+export OPENMPI_DIR=$HPCX_MPI_DIR
+
+ucx_info -v
+
+BM_OPT="-preclear -preits 40 -nits 20 -nps $CORES"
+if [ "$CASE" = "EmpHydroCyclone_30M" ]
+then
+    BM_OPT="-preits 1 -nits 1 -nps $CORES"
+elif [ "$CASE" = "kcs_with_physics" ]
+then
+    BM_OPT="-preits 40 -nits 20 -nps $CORES"
+elif [ "$CASE" = "vtmBenchmark_178M_V15_06_008_v2" ]
+then
+    BM_OPT="-preits 100 -nits 40 -nps $CORES"
+fi
+
+echo $BM_OPT
+echo PPN=$PPN
+
+echo "JobID: $PBS_JOBID"
+echo "Running Starccm Benchmark case : [${starccm_case}], Nodes: ${NODES} (Total Cores: ${CORES})"
+
+source $WOC_BENCH_DIR/apps/hpc/utils/azure_process_pinning.sh $PPN
+export mppflags="--bind-to cpulist:ordered --cpu-set $AZURE_PROCESSOR_LIST --rank-by slot --report-bindings -mca mca_base_env_list UCX_TLS=dc_x,sm;UCX_MAX_RNDV_RAILS=1"
+export LD_PRELOAD=${WOC_BENCH_DIR}/libnvidia-ml.so
+export LD_LIBRARY_PATH="${WOC_BENCH_DIR}:$LD_LIBRARY_PATH"
+
+cat $PBS_NODEFILE | sort -u > hostfile.txt
+sudo yum install pssh -y
+pssh -p 4 -t 0 -i -h hostfile.txt "sudo yum install libXt libnsl libnsl2 glibc -y"
+pssh -p 4 -t 0 -i -h hostfile.txt "ulimit -s unlimited && ulimit -l unlimited && ulimit -a"
+pssh -p 4 -t 0 -i -h hostfile.txt "sudo /sbin/sysctl vm.drop_caches=3"
+pssh -p 4 -t 0 -i -h hostfile.txt "free && sync && echo 3 | sudo tee /proc/sys/vm/drop_caches && free"
+
+starccm+ \
+    -np $CORES \
+    -v \
+    -machinefile $PBS_NODEFILE \
+    -power \
+    -podkey "$PODKEY" \
+    -rsh ssh \
+    -mpi openmpi4 \
+    -cpubind off \
+    -ldlibpath $LD_LIBRARY_PATH \
+    -ldpreload $LD_PRELOAD \
+    -fabric ucx \
+    -xsystemucx \
+    -mppflags "$mppflags" \
+    $STARCCM_CASE -benchmark "$BM_OPT"
+
+DATE=$(date +"%Y%m%d-%H%M%S.%N")
+cp $CASE-*.xml $PBS_O_WORKDIR/${CASE}-hpcx-${NODES}n-${PPN}cpn-${CORES}c-${DATE}.xml
