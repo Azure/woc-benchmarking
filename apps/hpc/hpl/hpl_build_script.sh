@@ -2,15 +2,23 @@
 
 export HPL_VERSION="2.3"
 
+#set arch according to the VM type
+#	HBv4/HX: skylake-avx512
+#	HBv3:    znver3
+#	HBv2:    znver2
+#	HB:      znver
+##################################
+export ARCH="skylake-avx512"
+
 wdir=$(pwd)
 module load gcc-9.2.0
 module load mpi/hpcx
 git clone https://github.com/flame/blis.git
 cd blis/
-git reset --hard ae10d9495486f589ed0320f0151b2d195574f1cf
+#git reset --hard ae10d9495486f589ed0320f0151b2d195574f1cf
 mkdir libblis
 libbls=$(pwd)/libblis
-sed -i 's/COPTFLAGS      := -O2/COPTFLAGS      := -O2 -Ofast -ffast-math -ftree-vectorize -funroll-loops -march=znver2/' config/amd64/make_defs.mk
+sed -i "s/COPTFLAGS      := -O2/COPTFLAGS      := -O3 -Ofast -ffast-math -ftree-vectorize -funroll-loops -funroll-all-loops  -fprefetch-loop-arrays --param prefetch-latency=300 -march=$ARCH /" config/amd64/make_defs.mk
 ./configure --prefix=$libbls --enable-threading=openmp CC=gcc zen3
 make 
 make install
@@ -29,7 +37,7 @@ sed -i 's,TOPdir       = $(HOME)/hpl'",TOPdir       = $hpldir," Make.Linux
 sed -i 's,LAdir        ='",LAdir        = $libbls," Make.Linux
 sed -i 's,LAinc        ='",LAinc        = -I$libbls/include/blis," Make.Linux
 sed -i 's,LAlib        = -lblas'",LAlib        = $libbls/lib/libblis.a -lm," Make.Linux
-sed -i 's/CCFLAGS      = $(HPL_DEFS)/CCFLAGS      = $(HPL_DEFS) -fomit-frame-pointer -O3 -funroll-loops -W -Wall -march=znver2 -mtune=znver2 -fopenmp/' Make.Linux
+sed -i "s/CCFLAGS      = $(HPL_DEFS)/CCFLAGS      = $(HPL_DEFS) -fomit-frame-pointer -O3 -funroll-loops -W -Wall -funroll-all-loops  -fprefetch-loop-arrays --param prefetch-latency=300 -march=$ARCH -fopenmp /" Make.Linux
 sed -i 's/LINKER       = mpif77/LINKER       = mpicc/' Make.Linux
 sed -i 's/LINKFLAGS    =/LINKFLAGS    = $(CCFLAGS)/' Make.Linux
 make arch=Linux
@@ -71,10 +79,8 @@ HPL.out      output file name (if any)
 8            memory alignment in double (> 0)
 EOF
 
-<<<<<<< HEAD
 
 chmod +x appfile_ccx*
-=======
 cat <<EOF > appfile_ccx
 -np 1 ./xhpl_ccx.sh 0 0-5 6
 -np 1 ./xhpl_ccx.sh 0 8-13 6
@@ -213,7 +219,6 @@ echo "end date: \$(date)"
 EOF
 
 chmod +x appfile_ccx
->>>>>>> 5f833d4bd55b3eb4d6b5ad7722772ba4b95a16d0
 chmod +x xhpl_ccx.sh
 chmod +x hpl_run_scr_*.sh
 chmod +x hpl_pssh_script.sh
