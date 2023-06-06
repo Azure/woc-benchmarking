@@ -17,14 +17,19 @@ sh namd_build_script.sh
 
 On prompt, enter your gitlab credentials to clone the NAMD repository from the gitlab. 
 
-To run a set of single VM test on a PBS cluster, modify the line '#PBS -J 1-64' and adjust it to the number of available VMs on the cluster, then submit the script
+To adjust the optimizations, change the ARCH variable to the respective architecture on which simulations is going to run, e.g. znver3, znver2, znver1 for HBv3, HBv2 and HB respectively. The script is to be modified for Intel based architectures, since they mostly support avx512 instructions.
+
+To run a 4 VM test on a PBS cluster, modify the paths in "namd.pbs" scripts and submit the script
 
 ```
-qsub array_hpl_run_scr.pbs
+qsub namd.pbs
 ```
 
 ### Note:
-Currently tested only on HBv2, HBv3 and HBv4 VMs.
+Currently tested only on HBv2 and HBv3 VMs.
+
+### Input files
+To obtain a reasonable performance on H series VMs, adjust the number of iterations to a large number, e.g. 50000. See the input parameters in this [blog post](https://techcommunity.microsoft.com/t5/azure-high-performance-computing/accelerating-namd-on-azure-hb-series-vms/ba-p/3775531). 
 
 
 
