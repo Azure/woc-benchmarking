@@ -34,7 +34,7 @@ SSH into the machine and run the following commands.
     ```
 ## Run the benchmark
 Finally, run the benchmark with the make run command, an example is given below. The value is only correct if the result is “VALID”, modify the value in the config files if the result is “INVALID”.
-    ```
-    make run RUN_ARGS="--benchmarks=bert --scenarios=offline --config_ver=default,high_accuracy,triton,high_accuracy_triton"
-    ```
+```
+make run RUN_ARGS="--benchmarks=bert --scenarios=offline --config_ver=default,high_accuracy,triton,high_accuracy_triton"
+```
 
