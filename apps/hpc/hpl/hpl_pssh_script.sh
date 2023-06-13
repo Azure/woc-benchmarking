@@ -1,6 +1,4 @@
 #!/bin/bash
-
-VM_SERIES=$1
 export wdir=$(pwd)
 
 sudo yum install pssh -y
@@ -14,15 +12,10 @@ then
 	pbsnodes -avS | grep free | awk -F ' ' '{print tolower($1)}' >> hosts.txt
 fi
 
-if [ "${VM_SERIES}" == "hbrs_v4" ]; then
-	pssh -p 301 -t 0 -i -h hosts.txt "cd $wdir && ./hpl_run_scr_hbv4.sh $wdir" >> hpl_pssh.log 2>&1
-elif [ "${VM_SERIES}" == "hbrs_v3" ]; then
+if [ "${VM_SERIES}" == "hbrs_v3" ]; then
 	pssh -p 301 -t 0 -i -h hosts.txt "cd $wdir && ./hpl_run_scr_hbv3.sh $wdir" >> hpl_pssh.log 2>&1
 elif [ "${VM_SERIES}" == "hbrs_v2" ]; then
 	pssh -p 301 -t 0 -i -h hosts.txt "cd $wdir && ./hpl_run_scr_hbv2.sh $wdir" >> hpl_pssh.log 2>&1
-else
-    echo "No defined VM series entered"
-    exit 1
 fi
 
 sleep 60
@@ -33,5 +26,4 @@ for i in ${names[@]}; do
 done
 
 echo "end date: $(date)"
-exit 0
 

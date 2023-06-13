@@ -22,7 +22,7 @@ cp ../appfile*_ccx .
 cp ../xhpl_ccx.sh .
 cp ../xhpl .
 
-export mpi_options="--mca mpi_leave_pinned 1 --bind-to none --report-bindings --mca btl self,vader --map-by ppr:4:numa:PE=6 -x OMP_NUM_THREADS=6 -x OMP_PROC_BIND=TRUE -x OMP_PLACES=cores -x LD_LIBRARY_PATH"
+export mpi_options="--mca mpi_leave_pinned 1 --bind-to none --report-bindings --mca btl self,vader --map-by ppr:1:l3cache -x OMP_NUM_THREADS=6 -x OMP_PROC_BIND=TRUE -x OMP_PLACES=cores -x LD_LIBRARY_PATH"
 
 echo "Running on $(hostname | tr "[:upper:]" "[:lower:]")" > hpl-$(hostname | tr "[:upper:]" "[:lower:]").log
 mpirun $mpi_options -app ./appfile_ccx_hbv3  >> hpl-$(hostname | tr "[:upper:]" "[:lower:]").log
