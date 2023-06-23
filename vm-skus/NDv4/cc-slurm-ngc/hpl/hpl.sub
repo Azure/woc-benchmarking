@@ -1,0 +1,45 @@
+#!/bin/bash
+#SBATCH -t 00:20:00
+#SBATCH --ntasks-per-node=8
+#SBATCH --mem=0
+#SBATCH --gpus-per-node=8
+#SBATCH -o logs/%x_%j.log
+#SBATCH --exclusive
+
+#export SLURM_WHOLE=1
+env | grep -i slurm
+env | grep -i log
+
+CONT='nvcr.io/nvidia/hpc-benchmarks:21.4-hpl'
+MOUNT='/shared/data/azure/benchmarking/NDv4/cc-slurm-ngc/hpl/dats/hpl-${SLURM_JOB_NUM_NODES}N.dat:/workspace/hpl-linux-x86_64/sample-dat/HPL-dgx-a100-${SLURM_JOB_NUM_NODES}N.dat'
+echo "Running on hosts: $(echo $(scontrol show hostname))"
+
+export OMPI_MCA_pml=ucx
+export OMPI_MCA_btl=^openib,smcuda
+export UCX_NET_DEVICES=mlx5_ib0:1,mlx5_ib1:1,mlx5_ib2:1,mlx5_ib3:1,mlx5_ib4:1,mlx5_ib5:1,mlx5_ib6:1,mlx5_ib7:1
+
+CPU_AFFINITY="24-35:36-47:0-11:12-23:72-83:84-95:48-59:60-71"
+GPU_AFFINITY="0:1:2:3:4:5:6:7"
+MEM_AFFINITY="1:1:0:0:3:3:2:2"
+UCX_AFFINITY="mlx5_ib0:mlx5_ib1:mlx5_ib2:mlx5_ib3:mlx5_ib4:mlx5_ib5:mlx5_ib6:mlx5_ib7"
+DAT="/workspace/hpl-linux-x86_64/sample-dat/HPL-dgx-a100-${SLURM_JOB_NUM_NODES}N.dat"
+
+CMD="hpl.sh --cpu-affinity ${CPU_AFFINITY} --cpu-cores-per-rank 12 --gpu-affinity ${GPU_AFFINITY} --mem-affinity ${MEM_AFFINITY} --ucx-affinity ${UCX_AFFINITY} --dat ${DAT}"
+
+
+
+srun \
+   --ntasks-per-node=1 \
+   --ntasks=$SLURM_JOB_NUM_NODES \
+   --whole --gpus-per-node=8 \
+   --container-name=hpl \
+   --container-image="${CONT}" \
+   --container-mounts="${MOUNT}" \
+   bash -c "ls -l /workspace/hpl-linux-x86_64/sample-dat;ls -l /workspace/hpl-linux-x86_64/sample-dat/HPL-dgx-a100-${SLURM_JOB_NUM_NODES}N.dat "
+
+srun \
+    --whole \
+    --gpus-per-node=8 \
+    --container-name=hpl \
+    --container-mounts="${MOUNT}" \
+    bash -c "${CMD}"

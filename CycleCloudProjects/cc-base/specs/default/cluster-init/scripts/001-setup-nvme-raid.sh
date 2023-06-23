@@ -32,3 +32,4 @@ else
 fi
 
 chmod 1777 $MNT_POINT
+mount $MNT_POINT
