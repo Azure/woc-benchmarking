@@ -10,8 +10,10 @@ export UCX_IB_ENABLE_CUDA_AFFINITY=n \
        NCCL_TOPO_FILE=/microsoft/ndv4-topo.xml
 #       NCCL_DEBUG=INFO \
 
+HPCX_DIR=`ls /opt | grep -i hpcx`
+
 CONT="nvcr.io#nvidia/pytorch:21.09-py3"
-MOUNT="/opt/microsoft:/microsoft,/shared/data/azure/benchmarking/NDv4/cc-slurm-ngc/nccl:/nccl,/opt/hpcx-v2.9.0-gcc-MLNX_OFED_LINUX-5.4-1.0.3.0-ubuntu18.04-x86_64:/opt/hpcx"
+MOUNT="/opt/microsoft:/microsoft,/shared/data/azure/benchmarking/NDv4/cc-slurm-ngc/nccl:/nccl,/opt/${HPCX_DIR}:/opt/hpcx"
 
 export OMPI_MCA_pml=ucx
 export OMPI_MCA_btl=^openib
