@@ -22,11 +22,12 @@ module purge
 module load $compiler
 module load mpi/$mpi_library
 
-export NETCDF_C=/apps/wrf-hpcx/netcdf
-export NETCDF=/apps/wrf-hpcx/netcdf
-export HDF5=/apps/wrf-hpcx/hdf5
+export WRFROOT="" #set the wrf root, see the build instructions
+export NETCDF_C=$WRFROOT/netcdf
+export NETCDF=$WRFROOT/netcdf
+export HDF5=$WRFROOT/hdf5
 export WRFIO_NCD_LARGE_FILE_SUPPORT=1
-export WRFROOT=/apps/wrf-hpcx/WRF-4.2.2/
+export WRFROOT=$WRFROOT/WRF-4.2.2/
 
 WRF_PATH=$(command -v wrf.exe)
 echo "wrf path:" ${WRFROOT}
@@ -66,12 +67,12 @@ ulimit -l unlimited
 ulimit -a
 
 
-export NETCDF_C=/apps/wrf-hpcx/netcdf
-export NETCDF=/apps/wrf-hpcx/netcdf
-export HDF5=/apps/wrf-hpcx/hdf5
+export NETCDF_C=$WRFROOT/netcdf
+export NETCDF=$WRFROOT/netcdf
+export HDF5=$WRFROOT/hdf5
 export WRFIO_NCD_LARGE_FILE_SUPPORT=1
-export LD_LIBRARY_PATH=/apps/wrf-hpcx/netcdf/lib:/apps/wrf-hpcx/hdf5/lib:${LD_LIBRARY_PATH}
-export WRFROOT=/apps/wrf-hpcx/WRF-4.2.2/
+export LD_LIBRARY_PATH=$WRFROOT/netcdf/lib:$WRFROOT/hdf5/lib:${LD_LIBRARY_PATH}
+export WRFROOT=$WRFROOT/WRF-4.2.2/
 
 module purge
 module load $compiler

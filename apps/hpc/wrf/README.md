@@ -37,9 +37,67 @@ make
 make install
 ```
 
+build hdf5-1.12.2
 
+```
+wget https://github.com/HDFGroup/hdf5/archive/refs/tags/hdf5-1_12_2.tar.gz
+tar -xzvf hdf5-1_12_2.tar.gz
+mkdir hdf5
+cd hdf5-1_12_2
+CFLAGS="$CFLAGS -fPIC -O3 -march=znver4" CXXFLAGS="$CXXFLAGS -fPIC -O3 -march=znver4" FFLAGS="$FFLAGS -fPIC -O3 -march=znver4" FCFLAGS="$FCFLAGS -fPIC -O3 -march=znver4" ./configure --prefix=$WRFROOT/hdf5 --with-zlib=$WRFROOT/zlib --enable-fortran --enable-shared --enable-parallel
+make -j 96
+make install
+```
 
+build netcdf-c 4.7.4
 
+```
+wget https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.7.4.tar.gz
+tar -xzvf v4.7.4.tar.gz
+mkdir netcdf
+cd netcdf-c-4.7.4
+CFLAGS="$CFLAGS -fPIC  -O3 -march=znver4" CXXFLAGS="$CXXFLAGS -fPIC  -O3 -march=znver4" FFLAGS="$FFLAGS -fPIC  -O3 -march=znver4" FCFLAGS="$FCFLAGS -fPIC  -O3 -march=znver4" CPPFLAGS="-I$WRFROOT/hdf5/include -I$WRFROOT/zlib/include" LDFLAGS="-L$WRFROOT/hdf5/lib -L$WRFROOT/zlib/lib" ./configure --enable-shared --enable-parallel-tests --disable-dap --prefix=$WRFROOT/netcdf --enable-netcdf4 
+make -j 96
+make install
+```
+
+build netcdf-fortran-4.5.3
+
+```
+wget https://github.com/Unidata/netcdf-fortran/archive/refs/tags/v4.5.3.tar.gz
+tar -xzvf v4.5.3.tar.gz
+cd netcdf-fortran-4.5.3
+export NCDIR=$WRFROOT/netcdf
+export LD_LIBRARY_PATH=${NCDIR}/lib:${LD_LIBRARY_PATH}
+CFLAGS="$CFLAGS -fPIC -O3 -march=znver4" CXXFLAGS="$CXXFLAGS -fPIC -O3 -march=znver4" FFLAGS="$FFLAGS -fPIC  -O3 -march=znver4" FCFLAGS="$FCFLAGS -fPIC  -O3 -march=znver4" CPPFLAGS=-I${NCDIR}/include LDFLAGS=-L${NCDIR}/lib ./configure --prefix=${NCDIR} --enable-netcdf4
+make -j 96
+make install
+```
+
+build WRF 4.2.2
+
+```
+export WRFIO_NCD_LARGE_FILE_SUPPORT=1
+export HDF5=$WRFROOT/hdf5
+export NETCDF=$WRFROOT/netcdf
+export ZLIB=$WRFROOT/zlib
+export PATH=$WRFROOT/netcdf/bin:$PATH
+export NETCDF_classic=1
+
+wget https://github.com/wrf-model/WRF/archive/refs/tags/v4.2.2.tar.gz
+tar -xzvf v4.2.2.tar.gz
+cd WRF-4.2.2
+
+./configure
+34
+```
+
+Modify the file `configure.wrf` and add the optimization flags to FCOPTIM. For compiler optimization, we recommend `-O3 -march=znver4 -Ofast` in your spack build receipe. GCC 13.1.0 is necessary to implement these compile time optimizations for znver4 architecture. Next, build WRF
+
+```
+./compile -j 96 em_real 2>&1 | tee compile.log
+  
+```
 
 For compiler optimization, we recommend `-O3 -march=znver4 -Ofast` in your spack build receipe. GCC 13.1.0 is necessary to implement these compile time optimizations for znver4 architecture. 
 
