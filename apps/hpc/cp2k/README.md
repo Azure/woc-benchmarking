@@ -32,6 +32,11 @@ To run a set of benchmarks, adjust the input variables at the top of `cp2k_bench
 ./cp2k_benchmarking.sh
 ```
 
+to obtain a summary of the results, adjust the input variables at the top of `summarize.sh` script and run
+```
+sh summarize.sh
+```
+
 ### Note:
 Currently tested on HB series VMs.
 
