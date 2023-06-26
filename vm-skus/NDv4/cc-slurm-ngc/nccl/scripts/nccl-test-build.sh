@@ -1,7 +1,8 @@
 #!/bin/bash
-  
+
+HPCX_DIR=`ls /opt | grep -i hpcx`
 CONT="nvcr.io#nvidia/pytorch:21.09-py3"
-MOUNT="/shared/data/azure/benchmarking/NDv4/cc-slurm-ngc/nccl:/nccl,/opt/hpcx-v2.9.0-gcc-MLNX_OFED_LINUX-5.4-1.0.3.0-ubuntu18.04-x86_64:/opt/hpcx"
+MOUNT="/shared/data/azure/benchmarking/NDv4/cc-slurm-ngc/nccl:/nccl,/opt/${HPCX_DIR}:/opt/hpcx"
 
 export OMPI_MCA_pml=ucx
 export OMPI_MCA_btl=^openib
