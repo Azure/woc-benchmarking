@@ -58,7 +58,7 @@ sh summarize.sh
 
 ## Authors
 
-arastegari@microsoft.com 
+arstgr
 
 
 ## Version History
